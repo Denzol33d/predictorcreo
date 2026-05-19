@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Prédicteur IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:'Rajdhani',sans-serif;
+  background:#060810;
+  color:#e0e0f0;
+  min-height:100vh;
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:30px 16px 60px;
+  overflow-x:hidden;
+}
+.bg-glow{
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse at 20% 10%,rgba(99,40,220,.15) 0%,transparent 50%),
+    radial-gradient(ellipse at 80% 90%,rgba(0,180,255,.08) 0%,transparent 50%);
+  pointer-events:none;z-index:0;
+}
+.wrap{width:100%;max-width:420px;position:relative;z-index:1;}
+
+.logo{text-align:center;margin-bottom:32px;}
+.logo-ring{
+  width:100px;height:100px;border-radius:50%;
+  border:2px solid #7c3aed;background:#0d0618;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;font-size:44px;
+  box-shadow:0 0 40px rgba(124,58,237,.3),inset 0 0 30px rgba(0,0,0,.5);
+  animation:lpulse 3s ease-in-out infinite;
+}
+@keyframes lpulse{
+  0%,100%{box-shadow:0 0 40px rgba(124,58,237,.3),inset 0 0 30px rgba(0,0,0,.5);}
+  50%{box-shadow:0 0 70px rgba(124,58,237,.5),inset 0 0 30px rgba(0,0,0,.5);}
+}
+.logo h1{
+  font-family:'Orbitron',monospace;font-size:24px;font-weight:900;letter-spacing:4px;
+  background:linear-gradient(90deg,#a855f7,#06b6d4);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.logo p{font-size:11px;color:#4b5563;letter-spacing:3px;text-transform:uppercase;margin-top:6px;}
+
+.card{
+  background:rgba(12,12,22,.95);border:1px solid #1e1e35;border-radius:24px;
+  padding:28px;backdrop-filter:blur(12px);
+  box-shadow:0 20px 60px rgba(0,0,0,.5);margin-bottom:20px;
+}
+
+.btn{
+  width:100%;border:none;margin-top:16px;padding:17px;border-radius:14px;
+  font-size:16px;font-weight:700;font-family:'Rajdhani',sans-serif;
+  letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:.25s;
+  display:block;text-align:center;text-decoration:none;
+}
+.btn-purple{background:linear-gradient(90deg,#7c3aed,#06b6d4);color:white;box-shadow:0 8px 25px rgba(124,58,237,.3);}
+.btn-purple:hover{transform:translateY(-2px);box-shadow:0 12px 35px rgba(124,58,237,.4);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+@keyframes fadein{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+.tabs{display:flex;gap:4px;background:#0d0d16;border:1px solid #1e1e2e;border-radius:14px;padding:5px;margin-bottom:24px;}
+.tab{
+  flex:1;padding:10px 4px;border:none;border-radius:10px;background:transparent;
+  color:#4b5563;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;
+  letter-spacing:1px;cursor:pointer;transition:.25s;text-transform:uppercase;
+}
+.tab.active{background:#160b2c;color:#c084fc;border:1px solid rgba(124,58,237,.35);}
+.tab:hover:not(.active){color:#9ca3af;background:#13131e;}
+
+/* AVIATOR */
+.avi-wrap{display:flex;flex-direction:column;align-items:center;gap:22px;}
+.coeff-ring{
+  width:180px;height:180px;border-radius:50%;border:2px solid #2e1060;background:#080614;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;
+  box-shadow:0 0 50px rgba(124,58,237,.12),inset 0 0 40px rgba(0,0,0,.6);
+  transition:box-shadow .4s,border-color .4s;
+}
+.coeff-ring::before{content:'';position:absolute;inset:8px;border-radius:50%;border:1px solid #200a45;}
+.coeff-ring.analyzing{border-color:#7c3aed;animation:rpulse 1s infinite;}
+.coeff-ring.result{border-color:#16a34a;box-shadow:0 0 60px rgba(74,222,128,.2),inset 0 0 40px rgba(0,0,0,.6);}
+@keyframes rpulse{
+  0%,100%{box-shadow:0 0 40px rgba(168,85,247,.2),inset 0 0 40px rgba(0,0,0,.6);}
+  50%{box-shadow:0 0 80px rgba(168,85,247,.45),inset 0 0 40px rgba(0,0,0,.6);}
+}
+.cval{font-family:'Orbitron',monospace;font-size:38px;font-weight:900;color:#c084fc;line-height:1;}
+.clbl{font-size:10px;color:#4b5563;letter-spacing:3px;text-transform:uppercase;margin-top:8px;}
+.coeff-ring.result .cval{color:#4ade80;animation:popin .5s cubic-bezier(.175,.885,.32,1.275) forwards;}
+.coeff-ring.analyzing .cval{animation:cblink .5s infinite alternate;}
+@keyframes popin{0%{transform:scale(.4);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+@keyframes cblink{from{opacity:.2;}to{opacity:1;}}
+.dots{display:flex;gap:6px;margin-top:10px;}
+.dot{width:7px;height:7px;border-radius:50%;background:#7c3aed;animation:dbounce .6s ease-in-out infinite;}
+.dot:nth-child(2){animation-delay:.15s;}.dot:nth-child(3){animation-delay:.3s;}
+@keyframes dbounce{0%,100%{transform:translateY(0);opacity:.3;}50%{transform:translateY(-5px);opacity:1;}}
+
+.round-btn{
+  width:160px;height:160px;border-radius:50%;border:2px solid #7c3aed;background:#0e0620;
+  color:#c084fc;font-family:'Orbitron',monospace;font-size:10px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:.25s;
+  box-shadow:0 0 24px rgba(124,58,237,.2),0 6px 24px rgba(0,0,0,.6);
+  line-height:1.6;text-align:center;padding:20px;
+}
+.round-btn:hover:not(:disabled){
+  border-color:#a855f7;color:#e9d5ff;
+  box-shadow:0 0 50px rgba(168,85,247,.4),0 6px 24px rgba(0,0,0,.6);transform:scale(1.04);
+}
+.round-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* MINES */
+.mines-wrap{display:flex;flex-direction:column;align-items:center;gap:18px;}
+.mines-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:100%;max-width:300px;}
+.cell{aspect-ratio:1;border-radius:8px;border:1px solid #1a1a2e;background:#0d0d16;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.cell.bomb{background:#180606;border-color:#7f1d1d;animation:bpop .4s cubic-bezier(.175,.885,.32,1.275);}
+.cell.safe{background:#061208;border-color:#14532d;animation:spop .35s cubic-bezier(.175,.885,.32,1.275);}
+@keyframes bpop{0%{transform:scale(0);opacity:0;}65%{transform:scale(1.2);}100%{transform:scale(1);opacity:1;}}
+@keyframes spop{0%{transform:scale(0);opacity:0;}65%{transform:scale(1.1);}100%{transform:scale(1);opacity:1;}}
+.mine-status{font-size:13px;letter-spacing:1px;color:#6b7280;text-align:center;min-height:20px;font-weight:500;}
+.mine-status.analyzing{color:#c084fc;animation:cblink .5s infinite alternate;}
+.mine-status.done{color:#f87171;}
+.bomb-info{display:flex;align-items:center;gap:10px;background:#0d0d16;border:1px solid #1a1a2e;border-radius:10px;padding:10px 20px;font-size:13px;color:#6b7280;}
+.bomb-info .bnum{font-family:'Orbitron',monospace;font-size:20px;color:#f87171;font-weight:700;}
+
+/* CHICKEN ROAD */
+.chicken-wrap{display:flex;flex-direction:column;align-items:center;gap:20px;width:100%;}
+
+.chicken-road-scene{
+  width:100%;
+  background:linear-gradient(180deg,#1a0e2e 0%,#0d1a10 100%);
+  border:1px solid #1e1e35;
+  border-radius:18px;
+  padding:16px 10px;
+  position:relative;
+  overflow:hidden;
+  min-height:130px;
+}
+.road-stripe{
+  position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:repeating-linear-gradient(90deg,#fbbf24 0,#fbbf24 18px,transparent 18px,transparent 36px);
+  opacity:.15;
+}
+.road-track{
+  display:flex;
+  align-items:flex-end;
+  gap:6px;
+  width:100%;
+  overflow-x:hidden;
+  padding-bottom:4px;
+  position:relative;
+}
+.chicken-char{
+  font-size:36px;line-height:1;position:relative;flex-shrink:0;
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));
+}
+.chicken-char.hop{animation:chickenHop .32s ease-in-out;}
+@keyframes chickenHop{
+  0%{transform:translateY(0) scaleX(1);}
+  40%{transform:translateY(-14px) scaleX(.95);}
+  70%{transform:translateY(-6px) scaleX(1.05);}
+  100%{transform:translateY(0) scaleX(1);}
+}
+
+.manhole{
+  width:54px;height:54px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#3a3a3a,#1a1a1a,#0a0a0a);
+  border:3px solid #4a4a4a;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;position:relative;
+  box-shadow:inset 0 3px 8px rgba(0,0,0,.8),0 2px 4px rgba(0,0,0,.5);
+  transition:border-color .4s,box-shadow .4s;
+}
+.manhole::before{
+  content:'';position:absolute;inset:4px;border-radius:50%;
+  background:repeating-conic-gradient(#2a2a2a 0deg 10deg,#1e1e1e 10deg 20deg);opacity:.7;
+}
+.manhole::after{
+  content:'';position:absolute;width:70%;height:4px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+  top:12px;border-radius:2px;
+}
+.manhole .mh-coeff{
+  position:relative;z-index:2;
+  font-family:'Orbitron',monospace;font-size:10px;font-weight:700;
+  color:#8a8a9a;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.9);
+  transition:color .4s,font-size .3s;
+}
+.manhole.reached{
+  border-color:#fbbf24;
+  box-shadow:inset 0 3px 8px rgba(0,0,0,.8),0 0 20px rgba(251,191,36,.4),0 0 40px rgba(251,191,36,.15);
+  animation:mhglow .6s ease-in-out;
+}
+.manhole.reached .mh-coeff{color:#fbbf24;font-size:11px;}
+@keyframes mhglow{
+  0%{box-shadow:inset 0 3px 8px rgba(0,0,0,.8),0 0 0 rgba(251,191,36,0);}
+  50%{box-shadow:inset 0 3px 8px rgba(0,0,0,.8),0 0 30px rgba(251,191,36,.6),0 0 60px rgba(251,191,36,.25);}
+  100%{box-shadow:inset 0 3px 8px rgba(0,0,0,.8),0 0 20px rgba(251,191,36,.4),0 0 40px rgba(251,191,36,.15);}
+}
+.manhole.safe-passed{
+  border-color:#4ade80;
+  box-shadow:inset 0 3px 8px rgba(0,0,0,.8),0 0 14px rgba(74,222,128,.3);
+}
+.manhole.safe-passed .mh-coeff{color:#4ade80;}
+
+.cr-multipliers{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
+.cr-mult-badge{
+  background:#0d0d16;border:1px solid #1e1e2e;border-radius:8px;
+  padding:4px 8px;font-family:'Orbitron',monospace;font-size:10px;color:#4b5563;
+  transition:all .3s;
+}
+.cr-mult-badge.passed{background:#061208;border-color:#16a34a;color:#4ade80;}
+.cr-mult-badge.target{background:#1a1200;border-color:#fbbf24;color:#fbbf24;
+  box-shadow:0 0 12px rgba(251,191,36,.25);}
+
+.chicken-status{
+  font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;
+  text-align:center;min-height:18px;font-weight:600;transition:color .3s;
+}
+.chicken-status.analyzing{color:#c084fc;animation:cblink .5s infinite alternate;}
+.chicken-status.done{color:#fbbf24;}
+
+.chicken-result{
+  background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(124,58,237,.08));
+  border:1px solid rgba(251,191,36,.25);border-radius:16px;
+  padding:18px 16px;text-align:center;width:100%;animation:fadein .4s ease;
+}
+.chicken-result .cr-label{font-size:11px;color:#6b7280;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.chicken-result .cr-manhole{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:#fbbf24;margin-bottom:4px;}
+.chicken-result .cr-coeff{font-family:'Orbitron',monospace;font-size:18px;color:#a855f7;}
+.chicken-result .cr-sub{font-size:13px;color:#6b7280;margin-top:8px;line-height:1.6;}
+
+.chicken-btn{
+  width:100%;border:none;padding:16px;border-radius:14px;
+  font-size:15px;font-weight:700;font-family:'Rajdhani',sans-serif;
+  letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:.25s;
+  background:linear-gradient(90deg,#d97706,#f59e0b,#d97706);
+  background-size:200% 100%;color:#1a0a00;
+  box-shadow:0 8px 25px rgba(217,119,6,.3);
+  position:relative;overflow:hidden;
+}
+.chicken-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
+  transform:translateX(-100%);transition:transform .5s;
+}
+.chicken-btn:hover:not(:disabled)::before{transform:translateX(100%);}
+.chicken-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 35px rgba(217,119,6,.45);}
+.chicken-btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+.hidden{display:none!important;}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+
+<div class="wrap">
+  <div class="logo">
+    <div class="logo-ring">⚡</div>
+    <h1>Prédicteur IA</h1>
+    <p>Moteur d'analyse intelligent</p>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" id="tab-avi" onclick="switchTab('avi')">✈ Aviateur</button>
+      <button class="tab" id="tab-mine" onclick="switchTab('mine')">💣 Mines</button>
+      <button class="tab" id="tab-chicken" onclick="switchTab('chicken')">🐔 Chicken</button>
+    </div>
+
+    <!-- AVIATOR -->
+    <div id="panel-avi">
+      <div class="avi-wrap">
+        <div class="coeff-ring" id="coeff-ring">
+          <div class="cval" id="cval">—</div>
+          <div class="clbl" id="clbl">En attente</div>
+          <div class="dots hidden" id="dots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+        <button class="round-btn" id="avi-btn" onclick="getCoeff()">
+          Obtenir<br>le coefficient
+        </button>
+      </div>
+    </div>
+
+    <!-- MINES -->
+    <div id="panel-mine" class="hidden">
+      <div class="mines-wrap">
+        <div class="bomb-info">💣 Mines : <span class="bnum" id="bnum">—</span></div>
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#4b5563;">Grille 5×5 — Analyse</div>
+        <div class="mines-grid" id="mgrid"></div>
+        <div class="mine-status" id="mstatus">Appuyez pour analyser</div>
+        <button class="btn btn-purple" id="mine-btn" onclick="getMines()" style="margin-top:0;max-width:280px;">💣 Détecter les mines</button>
+      </div>
+    </div>
+
+    <!-- CHICKEN ROAD -->
+    <div id="panel-chicken" class="hidden">
+      <div class="chicken-wrap">
+        <div class="chicken-road-scene">
+          <div class="road-stripe"></div>
+          <div style="font-size:10px;color:#4b5563;letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:12px;">🐔 Chicken Road — Prédiction</div>
+          <div class="road-track" id="roadTrack"></div>
+        </div>
+        <div class="cr-multipliers" id="crBadges"></div>
+        <div class="chicken-status" id="chickenStatus">Appuyez pour analyser</div>
+        <div class="chicken-result hidden" id="chickenResult">
+          <div class="cr-label">La poule ira jusqu'au</div>
+          <div class="cr-manhole" id="crManhole">—</div>
+          <div class="cr-coeff" id="crCoeff">—</div>
+          <div class="cr-sub" id="crSub"></div>
+        </div>
+        <button class="chicken-btn" id="chicken-btn" onclick="getChicken()">🐔 Prédire le parcours</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================
+//   AVIATOR
+// =====================
+const AVI_SEQUENCE = [2.98, 2.86];
+let aviIndex = 0;
+let aviAnalyzing = false;
+
+function getCoeff(){
+  if(aviAnalyzing) return;
+  aviAnalyzing = true;
+
+  const btn  = document.getElementById('avi-btn');
+  const ring = document.getElementById('coeff-ring');
+  const cval = document.getElementById('cval');
+  const clbl = document.getElementById('clbl');
+  const dots = document.getElementById('dots');
+
+  btn.disabled = true;
+  ring.className = 'coeff-ring analyzing';
+  cval.textContent = '...';
+  clbl.textContent = 'Initialisation';
+  dots.classList.remove('hidden');
+
+  const stages = ['Collecte des données...','Traitement en cours...','Calcul du résultat...'];
+  let si = 0;
+  const iv = setInterval(()=>{ if(si < stages.length) clbl.textContent = stages[si++]; }, 700);
+
+  setTimeout(()=>{
+    clearInterval(iv);
+    const coeff = AVI_SEQUENCE[aviIndex % AVI_SEQUENCE.length];
+    aviIndex++;
+
+    dots.classList.add('hidden');
+    ring.className = 'coeff-ring result';
+    cval.textContent = coeff.toFixed(2) + 'x';
+    clbl.textContent = 'Résultat';
+    btn.disabled = false;
+    aviAnalyzing = false;
+  }, 2200 + Math.random() * 600);
+}
+
+// =====================
+//   MINES
+// =====================
+let mineAnalyzing = false;
+
+const mgrid = document.getElementById('mgrid');
+for(let i = 0; i < 25; i++){
+  const c = document.createElement('div');
+  c.className = 'cell'; c.id = 'mc' + i;
+  mgrid.appendChild(c);
+}
+
+function getMines(){
+  if(mineAnalyzing) return;
+  mineAnalyzing = true;
+
+  const btn    = document.getElementById('mine-btn');
+  const status = document.getElementById('mstatus');
+  const bnum   = document.getElementById('bnum');
+
+  btn.disabled = true;
+  status.className = 'mine-status analyzing';
+  status.textContent = 'Analyse du terrain...';
+  bnum.textContent = '...';
+
+  for(let i = 0; i < 25; i++){
+    const c = document.getElementById('mc' + i);
+    c.className = 'cell'; c.textContent = '';
+  }
+
+  const delay = 2000 + Math.random() * 900;
+  const msgs = ['Scan des cellules...','Identification des patterns...','Finalisation...'];
+  let mi = 0;
+  const iv = setInterval(()=>{ if(mi < msgs.length) status.textContent = msgs[mi++]; }, Math.floor(delay / 3));
+
+  setTimeout(()=>{
+    clearInterval(iv);
+    const bc = 3 + Math.floor(Math.random() * 3);
+    bnum.textContent = bc;
+
+    const bombs = [];
+    while(bombs.length < bc){
+      const r = Math.floor(Math.random() * 25);
+      if(!bombs.includes(r)) bombs.push(r);
+    }
+
+    let idx = 0;
+    function revealNext(){
+      if(idx >= 25){
+        status.className = 'mine-status done';
+        status.textContent = `⚠ ${bc} mines — évitez ces cases !`;
+        mineAnalyzing = false;
+        btn.disabled = false;
+        btn.textContent = '💣 Détecter les mines';
+        return;
+      }
+      const cell = document.getElementById('mc' + idx);
+      const isBomb = bombs.includes(idx);
+      cell.className = 'cell ' + (isBomb ? 'bomb' : 'safe');
+      cell.textContent = isBomb ? '💣' : '✓';
+      idx++;
+      setTimeout(revealNext, 45);
+    }
+    revealNext();
+  }, delay);
+}
+
+// =====================
+//   CHICKEN ROAD
+// =====================
+const CHICKEN_COEFFS  = [9.09, 15.30, 26.78, 48.70, 92.54, 185.08];
+
+// Fixed sequence: first run → stop at 26.78x (index 2), second run → stop at 34.14x
+// 34.14 is not in the standard table so we insert it dynamically as a special target
+const CHICKEN_TARGETS = [
+  { idx: 2, coeff: 26.78 },
+  { idx: 3, coeff: 34.14 }   // lands between 26.78 and 48.70, shown as custom label
+];
+let chickenRun = 0;
+let chickenAnalyzing = false;
+
+function buildRoadTrack(){
+  const track = document.getElementById('roadTrack');
+  track.innerHTML = '';
+
+  const chick = document.createElement('div');
+  chick.className = 'chicken-char';
+  chick.id = 'chickenChar';
+  chick.textContent = '🐔';
+  track.appendChild(chick);
+
+  for(let i = 0; i < CHICKEN_COEFFS.length; i++){
+    const mh = document.createElement('div');
+    mh.className = 'manhole';
+    mh.id = 'mh' + i;
+    const coeff = document.createElement('div');
+    coeff.className = 'mh-coeff';
+    coeff.textContent = CHICKEN_COEFFS[i] + 'x';
+    mh.appendChild(coeff);
+    track.appendChild(mh);
+  }
+}
+
+function buildBadges(){
+  const badges = document.getElementById('crBadges');
+  badges.innerHTML = '';
+  for(let i = 0; i < CHICKEN_COEFFS.length; i++){
+    const b = document.createElement('div');
+    b.className = 'cr-mult-badge';
+    b.id = 'badge' + i;
+    b.textContent = CHICKEN_COEFFS[i] + 'x';
+    badges.appendChild(b);
+  }
+}
+
+buildRoadTrack();
+buildBadges();
+
+function resetChickenScene(){
+  buildRoadTrack();
+  buildBadges();
+}
+
+function getChicken(){
+  if(chickenAnalyzing) return;
+  chickenAnalyzing = true;
+
+  const btn    = document.getElementById('chicken-btn');
+  const status = document.getElementById('chickenStatus');
+  const result = document.getElementById('chickenResult');
+
+  btn.disabled = true;
+  result.classList.add('hidden');
+  status.className = 'chicken-status analyzing';
+  status.textContent = 'Analyse du comportement...';
+
+  resetChickenScene();
+
+  const target = CHICKEN_TARGETS[chickenRun % CHICKEN_TARGETS.length];
+  chickenRun++;
+
+  const stages = [
+    'Scan du terrain...',
+    'Calcul de trajectoire...',
+    'Modélisation du risque...',
+    'Prédiction finalisée !'
+  ];
+  let si = 0;
+  const totalDelay = 2800 + Math.random() * 700;
+  const stIv = setInterval(()=>{
+    if(si < stages.length) status.textContent = stages[si++];
+  }, Math.floor(totalDelay / stages.length));
+
+  setTimeout(()=>{
+    clearInterval(stIv);
+    status.className = 'chicken-status';
+    status.textContent = '';
+
+    animateChicken(target.idx, target.coeff, ()=>{
+      const mhNum = target.idx + 1;
+
+      document.getElementById('crManhole').textContent = `Colonne #${mhNum}`;
+      document.getElementById('crCoeff').textContent   = `Coefficient : ${target.coeff}x`;
+      document.getElementById('crSub').textContent     =
+        target.idx >= 3
+          ? '🔥 Excellent ! La poule va très loin — misez gros !'
+          : '✅ Prédiction fiable — misez sur cette case !';
+
+      result.classList.remove('hidden');
+      status.className = 'chicken-status done';
+      status.textContent = `🐔 S'arrête au puits #${mhNum}`;
+
+      chickenAnalyzing = false;
+      btn.disabled = false;
+      btn.textContent = '🐔 Nouvelle prédiction';
+    });
+  }, totalDelay);
+}
+
+function animateChicken(targetIdx, targetCoeff, callback){
+  let current = -1;
+
+  function hopToNext(){
+    current++;
+    if(current > targetIdx){ callback(); return; }
+
+    const chick = document.getElementById('chickenChar');
+    chick.className = 'chicken-char hop';
+    setTimeout(()=>{ chick.className = 'chicken-char'; }, 350);
+
+    // Mark previously passed manholes green
+    for(let i = 0; i < current; i++){
+      const mh = document.getElementById('mh' + i);
+      if(mh && !mh.classList.contains('reached')){
+        mh.className = 'manhole safe-passed';
+        const badge = document.getElementById('badge' + i);
+        if(badge) badge.className = 'cr-mult-badge passed';
+      }
+    }
+
+    const curMH    = document.getElementById('mh' + current);
+    const curBadge = document.getElementById('badge' + current);
+
+    if(current === targetIdx){
+      // Update the label on target manhole to show the exact coeff
+      const lbl = curMH.querySelector('.mh-coeff');
+      if(lbl) lbl.textContent = targetCoeff + 'x';
+
+      curMH.className = 'manhole reached';
+      if(curBadge){
+        curBadge.className = 'cr-mult-badge target';
+        curBadge.textContent = targetCoeff + 'x';
+      }
+      moveChickenToMH(chick, curMH, callback);
+    } else {
+      curMH.className = 'manhole safe-passed';
+      if(curBadge) curBadge.className = 'cr-mult-badge passed';
+      setTimeout(hopToNext, 420 + Math.random() * 80);
+    }
+  }
+
+  setTimeout(hopToNext, 300);
+}
+
+function moveChickenToMH(chick, mhEl, callback){
+  const chickRect = chick.getBoundingClientRect();
+  const mhRect    = mhEl.getBoundingClientRect();
+  const dx = mhRect.left - chickRect.left + (mhRect.width / 2 - chickRect.width / 2);
+
+  chick.style.transform  = `translateX(${dx}px)`;
+  chick.style.transition = 'transform 0.35s cubic-bezier(.4,0,.2,1)';
+  chick.className = 'chicken-char hop';
+
+  setTimeout(()=>{ chick.className = 'chicken-char'; if(callback) callback(); }, 400);
+}
+
+// =====================
+//   TAB SWITCHING
+// =====================
+function switchTab(t){
+  ['avi','mine','chicken'].forEach(x=>{
+    document.getElementById('tab-' + x).classList.toggle('active', x === t);
+    document.getElementById('panel-' + x).classList.toggle('hidden', x !== t);
+  });
+}
+</script>
+</body>
+</html>
